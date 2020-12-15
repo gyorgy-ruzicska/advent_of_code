@@ -119,3 +119,30 @@ with open('Day4/input.txt', 'r') as fd:
                 passport_dict={}
     print("There are %d valid passports"%valid1)
     print("There are %d strongly valid passports"%valid2)
+
+#Day_5
+with open('Day5/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    ids=[]
+    for line in reader:
+        row=line[0][:7]
+        column=line[0][7:]
+        list_of_rows=[i for i in range(128)]
+        list_of_columns=[i for i in range(8)]
+        for i in row:
+            if i=="F":
+                list_of_rows=list_of_rows[:int(len(list_of_rows)/2)]
+            else:
+                list_of_rows=list_of_rows[int(len(list_of_rows)/2):]
+        for i in column:
+            if i=="L":
+                list_of_columns=list_of_columns[:int(len(list_of_columns)/2)]
+            else:
+                list_of_columns=list_of_columns[int(len(list_of_columns)/2):]
+        id=list_of_rows[0]*8+list_of_columns[0]
+        ids.append(id)
+    for i in ids[:-1]:
+        if i+1 not in ids:
+            my_id=i+1
+    print("The highest ID is: "+str(max(ids)))
+    print("My ID is: "+str(my_id))
