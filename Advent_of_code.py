@@ -42,3 +42,27 @@ with open('Day2/input.txt', 'r') as fd:
             valid2+=1
     print("Number of valid password by policy 1: "+ str(valid1))
     print("Number of valid password by policy 2: "+ str(valid2))
+
+#Day_3
+def split(word):
+    return [char for char in word]
+
+with open('Day3/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    list_of_numbers=[11,31,51,71,12]
+    for i in list_of_numbers:
+        locals()["location" + str(i)] = 0
+        locals()["trees" + str(i)] = 0
+    for row in reader:
+        mylist=split(row[0])
+        for i in list_of_numbers[:-1]:
+            if mylist[locals()["location" + str(i)]%31]=="#":
+                locals()["trees" + str(i)]+=1
+        if (mylist[location12%31]=="#")&(location11%2==0):
+            trees12+=1
+        for i in list_of_numbers[:-1]:
+            locals()["location" + str(i)]+=int(str(i)[0])
+        if location11%2==0:
+            location12+=1
+    print("We pass %d number of trees by going 1 down and 3 right!"%trees31)
+    print("The product for the second part: "+str(trees11*trees31*trees51*trees71*trees12))
