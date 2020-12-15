@@ -146,3 +146,32 @@ with open('Day5/input.txt', 'r') as fd:
             my_id=i+1
     print("The highest ID is: "+str(max(ids)))
     print("My ID is: "+str(my_id))
+
+
+#Day_6
+def split(word):
+    return [char for char in word]
+def length_calculator(answers,any_unique,all_unique):
+    letters=''.join(answers)
+    any_unique.append(len(set(letters)))
+    all_answered=split(answers.pop(0))
+    for i in answers:
+        for j in all_answered:
+            if j not in i:
+                all_answered=[k for k in all_answered if k != j]
+    all_unique.append(len(all_answered))
+    return any_unique,all_unique
+with open('Day6/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    answers=[]
+    any_unique=[]
+    all_unique=[]
+    for line in reader:
+        if line==[]:
+            any_unique,all_unique=length_calculator(answers,any_unique,all_unique)
+            answers=[]
+        else:
+            answers.extend(line)
+    any_unique,all_unique=length_calculator(answers,any_unique,all_unique)
+    print("The number of questions anyone answered 'yes': "+ str(sum(any_unique)))
+    print("The number of questions everyone answered 'yes': "+ str(sum(all_unique)))
