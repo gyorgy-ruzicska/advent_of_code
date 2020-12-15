@@ -1,5 +1,6 @@
 import pandas as pd
 import csv
+import re
 
 
 #Day_1
@@ -66,3 +67,55 @@ with open('Day3/input.txt', 'r') as fd:
             location12+=1
     print("We pass %d number of trees by going 1 down and 3 right!"%trees31)
     print("The product for the second part: "+str(trees11*trees31*trees51*trees71*trees12))
+
+#Day_4
+with open('Day4/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    passport_dict={}
+    valid1=0
+    valid2=0
+    for row in reader:
+        try:
+            list=row[0].split(" ")
+            for i in list:
+                key, value= i.split(":")
+                passport_dict[key]=value
+        except:
+            try:
+                key, value= row[0].split(":")
+                passport_dict[key]=value
+            except:
+                keys=passport_dict.keys()
+                if "byr" in keys and "iyr" in keys and "eyr" in keys and "hgt" in keys and\
+                "hcl" in keys and "ecl" in keys and "pid" in keys:
+                    valid1+=1
+                    valid_height=False
+                    valid_hair=False
+                    valid_eye=False
+                    valid_pid=False
+                    eyes=["amb","blu","brn","gry","grn","hzl","oth"]
+                    height=re.match(r"([0-9]+)([a-z]+)",passport_dict["hgt"],re.I)
+                    hair=re.match(r"(#)([0-9a-f]{6})",passport_dict["hcl"],re.I)
+                    if height:
+                        if (height.groups()[1]=="cm") & (150<=int(height.groups()[0])) &\
+                        (int(height.groups()[0])<=193):
+                            valid_height=True
+                        elif (height.groups()[1]=="in") & (59<=int(height.groups()[0])) &\
+                             (int(height.groups()[0])<=76):
+                             valid_height=True
+                    if hair:
+                        valid_hair=True
+                    if passport_dict["ecl"] in eyes:
+                        valid_eye=True
+                    if (len(passport_dict["pid"])==9) & (passport_dict["pid"].isnumeric()):
+                        valid_pid=True
+                    if (len(passport_dict["byr"])==4) & (1920<=int(passport_dict["byr"])) &\
+                       (int(passport_dict["byr"])<=2002) & (len(passport_dict["iyr"])==4) &\
+                       (2010<=int(passport_dict["iyr"])) & (int(passport_dict["iyr"])<=2020) &\
+                       (len(passport_dict["eyr"])==4) & (2020<=int(passport_dict["eyr"])) &\
+                       (int(passport_dict["eyr"])<=2030)& valid_height & valid_hair&\
+                       valid_eye & valid_pid:
+                        valid2+=1
+                passport_dict={}
+    print("There are %d valid passports"%valid1)
+    print("There are %d strongly valid passports"%valid2)
