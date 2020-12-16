@@ -2,7 +2,7 @@ import pandas as pd
 import csv
 import re
 
-
+"""
 #Day_1
 with open('Day1/input.txt', 'r') as fd:
     reader = csv.reader(fd)
@@ -175,3 +175,90 @@ with open('Day6/input.txt', 'r') as fd:
     any_unique,all_unique=length_calculator(answers,any_unique,all_unique)
     print("The number of questions anyone answered 'yes': "+ str(sum(any_unique)))
     print("The number of questions everyone answered 'yes': "+ str(sum(all_unique)))
+"""
+#Day_7
+with open('Day7/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    numbered_rules={}
+    simple_rules={}
+    for line in reader:
+        line=', '.join(line)
+        bigbag, smallbag=line.split(" contain ")
+        bigbag=bigbag[:-1]
+        smallbag=smallbag.strip('.')
+        if ", " in smallbag:
+            smallbags=smallbag.split(",  ")
+            smallbags=[x[:-1] if x[-1]=="s" else x for x in smallbags]
+            numbered_rules[bigbag]=smallbags
+            smallbags=[x.strip("0123456789 ") for x in smallbags]
+        else:
+            smallbags=[smallbag]
+        smallbags=[x[:-1] if x[-1]=="s" else x for x in smallbags]
+        numbered_rules[bigbag]=smallbags
+        smallbags=[x.strip("0123456789 ") for x in smallbags]
+        simple_rules[bigbag]=smallbags
+
+class Bag():
+    def __init__(self, type, contain, rules):
+        """
+        contain is a list of strings or Bag objects
+        """
+        self.type=type
+        self.contain=contain
+        self.rules=rules
+    def __eq__(self, other):
+        if not isinstance(other, Bag):
+            return NotImplemented
+        return self.type == other.type
+    def get_type(self):
+        return self.type
+    def get_elements(self):
+        return self.contain
+    def get_rules(self):
+        return self.rules
+    def update_elements(self):
+        current_elements=self.get_elements()
+        updated_elements=current_elements.copy()
+        rules=self.get_rules()
+        for bag in current_elements:
+            try:
+                children=rules[bag]
+                bag_object=Bag(bag,children,rules)
+                updated_elements.append(bag_object)
+                updated_elements.remove(bag)
+            except TypeError:
+                bag_object=bag
+            except KeyError:
+                break
+            bag_type=bag_object.get_type()
+            children=bag_object.get_elements()
+            for element in children:
+                if element != "no other bag":
+                    grand_children=rules[element]
+                    bag_object=Bag(element,grand_children,rules)
+                    to_add=True
+                    for i in updated_elements:
+                        if bag_object==i:
+                            to_add=False
+                    if to_add==True:
+                    updated_elements.append(bag_object)
+        self.contain=updated_elements
+
+shiny_gold_containers=0
+mybag=Bag("bright indigo bag", ["shiny turquoise bag", "wavy yellow bag"], simple_rules)
+mybag.update_elements()
+#print(mybag.get_elements())
+
+for key,value in simple_rules.items():
+    mybag=Bag(key, value, simple_rules)
+    i=0
+    while i<len(mybag.get_elements()):
+        mybag.update_elements()
+        i+=1
+    elements=mybag.get_elements()
+    for i in elements:
+        if i!="no other bag":
+            if i.get_type()=="shiny gold bag":
+                shiny_gold_containers+=1
+
+print("The number of bags that may contain a skiny gold bag: "+str(shiny_gold_containers))
