@@ -179,8 +179,7 @@ with open('Day6/input.txt', 'r') as fd:
 #Day_7
 with open('Day7/input.txt', 'r') as fd:
     reader = csv.reader(fd)
-    numbered_rules={}
-    simple_rules={}
+    rules={}
     for line in reader:
         line=', '.join(line)
         bigbag, smallbag=line.split(" contain ")
@@ -189,23 +188,23 @@ with open('Day7/input.txt', 'r') as fd:
         if ", " in smallbag:
             smallbags=smallbag.split(",  ")
             smallbags=[x[:-1] if x[-1]=="s" else x for x in smallbags]
-            numbered_rules[bigbag]=smallbags
-            smallbags=[x.strip("0123456789 ") for x in smallbags]
         else:
             smallbags=[smallbag]
         smallbags=[x[:-1] if x[-1]=="s" else x for x in smallbags]
-        numbered_rules[bigbag]=smallbags
-        smallbags=[x.strip("0123456789 ") for x in smallbags]
-        simple_rules[bigbag]=smallbags
+        if smallbags != ["no other bag"]:
+            smallbags=[x.split(" ",1) for x in smallbags]
+        else:
+            smallbags=[[0,"no other bag"]]
+        rules[bigbag]=smallbags
 
 class Bag():
-    def __init__(self, type, contain, rules):
+    def __init__(self, type, contain, my_rules):
         """
         contain is a list of strings or Bag objects
         """
         self.type=type
         self.contain=contain
-        self.rules=rules
+        self.my_rules=my_rules
     def __eq__(self, other):
         if not isinstance(other, Bag):
             return NotImplemented
@@ -215,50 +214,74 @@ class Bag():
     def get_elements(self):
         return self.contain
     def get_rules(self):
-        return self.rules
-    def update_elements(self):
+        return self.my_rules
+    def elements_to_object(self, full_set=False):
         current_elements=self.get_elements()
-        updated_elements=current_elements.copy()
-        rules=self.get_rules()
-        for bag in current_elements:
-            try:
-                children=rules[bag]
-                bag_object=Bag(bag,children,rules)
-                updated_elements.append(bag_object)
-                updated_elements.remove(bag)
-            except TypeError:
-                bag_object=bag
-            except KeyError:
-                break
-            bag_type=bag_object.get_type()
-            children=bag_object.get_elements()
+        bags=current_elements.copy()
+        my_rules=self.get_rules()
+        try:
+            for bag in bags:
+                children=my_rules[bag[1]]
+                bag_object=Bag(bag[1],children,my_rules)
+                if full_set==True:
+                    for i in range(int(bag[0])):
+                        current_elements.append(bag_object)
+                else:
+                    current_elements.append(bag_object)
+            for bag in bags:
+                current_elements.remove(bag)
+        except KeyError:
+            pass
+        self.contain=current_elements
+        return current_elements
+    def update_elements(self, newly_added_elements,full_set=False):
+        current_elements=self.get_elements()
+        my_rules=self.get_rules()
+        added_elements=[]
+        for bag in newly_added_elements:
+            bag_type=bag.get_type()
+            children=bag.get_elements()
             for element in children:
-                if element != "no other bag":
-                    grand_children=rules[element]
-                    bag_object=Bag(element,grand_children,rules)
+                if element != [0,"no other bag"]:
+                    grand_children=my_rules[element[1]]
+                    bag_object=Bag(element[1],grand_children,my_rules)
                     to_add=True
-                    for i in updated_elements:
+                    total_elements=current_elements.copy()
+                    total_elements.extend(added_elements)
+                    for i in total_elements:
                         if bag_object==i:
                             to_add=False
-                    if to_add==True:
-                    updated_elements.append(bag_object)
-        self.contain=updated_elements
+                    if full_set==True:
+                        for i in range(int(element[0])):
+                            added_elements.append(bag_object)
+                    elif to_add==True:
+                        added_elements.append(bag_object)
+        current_elements.extend(added_elements)
+        self.contain=current_elements
+        return added_elements
 
 shiny_gold_containers=0
-mybag=Bag("bright indigo bag", ["shiny turquoise bag", "wavy yellow bag"], simple_rules)
-mybag.update_elements()
-#print(mybag.get_elements())
-
-for key,value in simple_rules.items():
-    mybag=Bag(key, value, simple_rules)
+for key,value in rules.items():
+    mybag=Bag(key, value.copy(), rules)
     i=0
-    while i<len(mybag.get_elements()):
-        mybag.update_elements()
-        i+=1
-    elements=mybag.get_elements()
-    for i in elements:
-        if i!="no other bag":
-            if i.get_type()=="shiny gold bag":
-                shiny_gold_containers+=1
+    added_elements=mybag.elements_to_object()
+    if added_elements==[[0, 'no other bag']]:
+        pass
+    else:
+        while i<len(mybag.get_elements()):
+            added_elements=mybag.update_elements(added_elements)
+            i+=1
+        elements=mybag.get_elements()
+        for i in elements:
+            if i!=[0,"no other bag"]:
+                if i.get_type()=="shiny gold bag":
+                    shiny_gold_containers+=1
+print("The number of bags that may contain a shiny gold bag: "+str(shiny_gold_containers))
 
-print("The number of bags that may contain a skiny gold bag: "+str(shiny_gold_containers))
+mybag=Bag("shiny gold bag", [[1,"pale maroon bag"], [3,"plaid blue bag"],\
+          [5, "dull tan bag"]], rules)
+added_elements=mybag.elements_to_object(full_set=True)
+while added_elements!=[]:
+    added_elements=mybag.update_elements(added_elements,full_set=True)
+
+print("The number of bags within a shiny gold bag: "+str(len(mybag.get_elements())))
