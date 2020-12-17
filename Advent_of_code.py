@@ -2,7 +2,7 @@ import pandas as pd
 import csv
 import re
 
-"""
+
 #Day_1
 with open('Day1/input.txt', 'r') as fd:
     reader = csv.reader(fd)
@@ -29,17 +29,17 @@ with open('Day2/input.txt', 'r') as fd:
     valid2=0
     for row in reader:
         number, letter, text = row[0].split(" ")
-        min, max = number.split("-")
+        minimum, maximum = number.split("-")
         letter = letter.strip(":")
         letter_count=0
         for i in text:
             if i==letter:
                 letter_count+=1
-        if (int(min)<=letter_count) & (letter_count<=int(max)):
+        if (int(minimum)<=letter_count) & (letter_count<=int(maximum)):
             valid1+=1
-        if (letter==text[int(min)-1]) & (letter!=text[int(max)-1]):
+        if (letter==text[int(minimum)-1]) & (letter!=text[int(maximum)-1]):
             valid2+=1
-        if (letter!=text[int(min)-1]) & (letter==text[int(max)-1]):
+        if (letter!=text[int(minimum)-1]) & (letter==text[int(maximum)-1]):
             valid2+=1
     print("Number of valid password by policy 1: "+ str(valid1))
     print("Number of valid password by policy 2: "+ str(valid2))
@@ -175,7 +175,7 @@ with open('Day6/input.txt', 'r') as fd:
     any_unique,all_unique=length_calculator(answers,any_unique,all_unique)
     print("The number of questions anyone answered 'yes': "+ str(sum(any_unique)))
     print("The number of questions everyone answered 'yes': "+ str(sum(all_unique)))
-"""
+
 #Day_7
 with open('Day7/input.txt', 'r') as fd:
     reader = csv.reader(fd)
@@ -285,3 +285,60 @@ while added_elements!=[]:
     added_elements=mybag.update_elements(added_elements,full_set=True)
 
 print("The number of bags within a shiny gold bag: "+str(len(mybag.get_elements())))
+
+#Day_8
+with open('Day8/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    rules=[]
+    for line in reader:
+        particular_rule = line[0].split(" ")
+        rules.append(particular_rule)
+
+
+def run_through(start_index, my_rules):
+    proceed=True
+    new_index=start_index
+    element=my_rules[new_index]
+    visited_elements=[[element,new_index]]
+    accumulator=0
+    last_index=len(my_rules)-1
+    last_element=[my_rules[-1], last_index]
+    while proceed:
+        direction, number = element
+        current_index=new_index
+        if direction=="acc":
+            new_index=current_index+1
+            accumulator+=int(number)
+        elif direction=="jmp":
+            new_index=current_index+int(number)
+        else:
+            new_index=current_index+1
+        element=my_rules[new_index]
+        element_list=[element,new_index]
+        if element_list in visited_elements:
+            cause="Infinite loop"
+            break
+        elif element_list==last_element:
+            cause="Reached the end"
+            visited_elements.append(element_list)
+            if element[0]=="acc":
+                accumulator+=int(last_element[0][1])
+            break
+        visited_elements.append(element_list)
+    return accumulator, cause
+
+accumulator, cause=run_through(0, rules)
+print("The value of the accumulator before visiting the same element again: "+str(accumulator))
+for i in range(len(rules)):
+    modified_rules=[x[:] for x in rules]
+    if rules[i][0]=="jmp":
+        modified_rules[i][0]="nop"
+        accumulator, cause = run_through(0, modified_rules)
+        if cause=="Reached the end":
+            break
+    elif rules[i][0]=="nop":
+        modified_rules[i][0]="jmp"
+        accumulator, cause = run_through(0, modified_rules)
+        if cause=="Reached the end":
+            break
+print("The value of the accumulator after the last item with the modified rule: "+str(accumulator))
