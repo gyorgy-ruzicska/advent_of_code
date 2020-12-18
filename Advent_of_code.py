@@ -342,3 +342,35 @@ for i in range(len(rules)):
         if cause=="Reached the end":
             break
 print("The value of the accumulator after the last item with the modified rule: "+str(accumulator))
+
+#Day_9
+
+with open('Day9/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    numbers=[]
+    for line in reader:
+        numbers.extend(line)
+    numbers=[int(x) for x in numbers]
+
+for i in range(len(numbers[25:])):
+    index=i+25
+    my_sums=[]
+    for j in range(len(numbers[i:i+24])):
+        for k in range(len(numbers[j+1:i+25])):
+            my_sum=numbers[j+i]+numbers[k+j+1]
+            my_sums.append(my_sum)
+    if int(numbers[index]) not in my_sums:
+        print("The invalid number: "+str(numbers[index]))
+        invalid_number=numbers[index]
+        break
+
+for i in range(len(numbers[:index-2])):
+    for j in range(len(numbers[i+1:index-1])):
+        start_number=numbers[i]
+        end_number=numbers[i+j+1]
+        sum=0
+        for element in numbers[i:i+j+2]:
+            sum+=element
+        if sum==invalid_number:
+            print("The sum of the numbers: "+str(min(numbers[i:i+j+2])+max(numbers[i:i+j+2])))
+            break
