@@ -374,3 +374,64 @@ for i in range(len(numbers[:index-2])):
         if sum==invalid_number:
             print("The sum of the numbers: "+str(min(numbers[i:i+j+2])+max(numbers[i:i+j+2])))
             break
+
+#Day_10
+
+with open('Day10/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    list_of_numbers=[]
+    for row in reader:
+        list_of_numbers.append(int(row[0]))
+list_of_numbers.append(0)
+list_of_numbers.sort()
+my_device=list_of_numbers[-1]+3
+list_of_numbers.append(my_device)
+jolts1=0
+jolts2=0
+jolts3=0
+for i in range(len(list_of_numbers[:-1])):
+    difference=list_of_numbers[i+1]-list_of_numbers[i]
+    if difference==1:
+        jolts1+=1
+    elif difference==2:
+        jolts2+=1
+    else:
+        jolts3+=1
+print("The number of 1-jolt differences multiplied by the number of 3-jolt differences is: "\
+      +str(jolts1*jolts3))
+
+
+def update_adapter_chain(dict_of_chains, adapters, my_device):
+    new_dict_of_chains={}
+    updated=False
+    for key, value in dict_of_chains.items():
+        for i in range(1,4):
+            new_number=key+i
+            if new_number in adapters:
+                if new_number in new_dict_of_chains.keys():
+                    existing_lenght=new_dict_of_chains[new_number]
+                    new_dict_of_chains[new_number]=existing_lenght+value
+                else:
+                    new_dict_of_chains[new_number]=value
+                updated=True
+        if key==my_device:
+            if key in new_dict_of_chains.keys():
+                existing_lenght=new_dict_of_chains[key]
+                new_dict_of_chains[key]=existing_lenght+value
+            else:
+                new_dict_of_chains[key]=value
+    return new_dict_of_chains, updated
+
+dict_of_chains={}
+dict_of_chains[0]=1
+updated=True
+
+while updated==True:
+    dict_of_chains, updated= update_adapter_chain(dict_of_chains, list_of_numbers, my_device)
+
+i=0
+for key, value in dict_of_chains.items():
+    length=value
+    i+=length
+
+print("The number of distinct ways to arrange adapters: "+str(i))
