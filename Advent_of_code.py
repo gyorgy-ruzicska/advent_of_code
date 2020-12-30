@@ -435,3 +435,94 @@ for key, value in dict_of_chains.items():
     i+=length
 
 print("The number of distinct ways to arrange adapters: "+str(i))
+
+#Day_11
+import pandas as pd
+import csv
+import re
+
+with open('Day11/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    list_of_seats=[]
+    for row in reader:
+        list_of_row=[element for element in row[0]]
+        list_of_seats.append(list_of_row)
+
+def march(list_of_seats,first_index,second_index,j):
+    try:
+        first_index=first_index+j[0]
+        second_index=second_index+j[1]
+        if (first_index==-1) | (second_index==-1):
+            neighboring_seat=".."
+        else:
+            neighboring_seat=list_of_seats[first_index][second_index]
+    except IndexError:
+        neighboring_seat=".."
+    return neighboring_seat, first_index, second_index
+
+def check_neighbors(list_of_seats, row, column, complex=False):
+    neighbors=[]
+    neighbor_indices=[(-1,0), (-1,1), (0,1), (1,1),\
+                      (1,0), (1,-1), (0,-1), (-1,-1)]
+    for j in neighbor_indices:
+        first_index=row
+        second_index=column
+        try:
+            neighboring_seat, first_index, second_index=march(list_of_seats,first_index,second_index,j)
+            if complex==True:
+                while neighboring_seat==".":
+                    neighboring_seat, first_index, second_index=march(list_of_seats,first_index,second_index,j)
+            neighbors.append(neighboring_seat)
+        except IndexError:
+            neighbors.append("..")
+    return neighbors
+
+def update_seat(list_of_seats, row, column, complex):
+    updated_seat=list_of_seats[row][column]
+    updated=False
+    if list_of_seats[row][column]=="L":
+        neighbors=check_neighbors(list_of_seats, row, column, complex)
+        if "#" not in neighbors:
+            updated_seat="#"
+            updated=True
+    if list_of_seats[row][column]=="#":
+        neighbors=check_neighbors(list_of_seats, row, column, complex)
+        list_occupied=[1 for i in neighbors if i=="#"]
+        number_occupied=sum(list_occupied)
+        if complex==True:
+            threshold=5
+        else:
+            threshold=4
+        if threshold<=number_occupied:
+            updated_seat="L"
+            updated=True
+    return updated_seat, updated
+
+def update_hall(list_of_seats, complex=False):
+    updated_hall=False
+    updated_seats=[x[:] for x in list_of_seats]
+    for row in range(len(list_of_seats)):
+        for column in range(len(list_of_seats[0])):
+            updated_seat, updated=update_seat(list_of_seats, row, column, complex)
+            if updated==True:
+                updated_hall=True
+                updated_seats[row][column]=updated_seat
+    return updated_seats, updated_hall
+
+list_of_seats_copy=[element[:] for element in list_of_seats]
+
+updated_hall=True
+while updated_hall==True:
+    list_of_seats, updated_hall=update_hall(list_of_seats)
+
+updated_hall=True
+while updated_hall==True:
+    list_of_seats_copy, updated_hall=update_hall(list_of_seats_copy, complex=True)
+
+for i in [(list_of_seats,"first rule"), (list_of_seats_copy, "second rule")]:
+    occupied_seats=0
+    for row in i[0]:
+        for seat in row:
+            if seat=="#":
+                occupied_seats+=1
+    print("The number of occupied seats with %s: "%i[1]+str(occupied_seats))
