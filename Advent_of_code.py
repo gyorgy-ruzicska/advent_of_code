@@ -1,6 +1,7 @@
 import pandas as pd
 import csv
 import re
+import math
 
 
 #Day_1
@@ -76,8 +77,8 @@ with open('Day4/input.txt', 'r') as fd:
     valid2=0
     for row in reader:
         try:
-            list=row[0].split(" ")
-            for i in list:
+            splitted_list=row[0].split(" ")
+            for i in splitted_list:
                 key, value= i.split(":")
                 passport_dict[key]=value
         except:
@@ -526,10 +527,6 @@ for i in [(list_of_seats,"first rule"), (list_of_seats_copy, "second rule")]:
 
 #Day_12
 
-import pandas as pd
-import csv
-import re
-
 with open('Day12/input.txt', 'r') as fd:
     reader = csv.reader(fd)
     list_of_instructions=[]
@@ -636,3 +633,49 @@ for i in list_of_instructions:
 
 print("Manhattan distance with first rule: "+str(abs(new_position_1[0][0])+abs(new_position_1[0][1])))
 print("Manhattan distance with second rule: "+str(abs(new_position_2[0][0])+abs(new_position_2[0][1])))
+
+#Day_13
+
+with open('Day13/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    input_lines_first=[]
+    input_lines_second=[]
+    for row in reader:
+        input_lines_second.append(row)
+        row=[int(i) for i in row if i!="x"]
+        input_lines_first.append(row)
+
+possible_departures=[]
+for i in input_lines_first[1]:
+    departure=input_lines_first[0][0]/i
+    departure=math.ceil(departure)*i
+    possible_departures.append(departure)
+
+possible_departures=list(zip(input_lines_first[1], possible_departures))
+earliest_departure=possible_departures[0]
+
+for j in possible_departures:
+    if j[1]<earliest_departure[1]:
+        earliest_departure=j
+
+print("The earliest bust to take: "+str(earliest_departure[0]*(earliest_departure[1]\
+       -input_lines_first[0][0])))
+
+minutes=[i for i in range(len(input_lines_second[1]))]
+ids_minutes=list(zip(input_lines_second[1], minutes))
+ids_minutes={int(i[0]): -i[1]%int(i[0]) for i in ids_minutes if i[0]!="x"}
+ids_minutes_items = ids_minutes.items()
+ids_minutes=sorted(ids_minutes_items, reverse=True)
+max_id_minutes=ids_minutes[0]
+ids_minutes=dict(ids_minutes)
+ids=list(ids_minutes.keys())
+
+val=max_id_minutes[1]
+r=max_id_minutes[0]
+
+for bus in ids[1:]:
+    while val % bus != ids_minutes[bus]:
+        val += r
+    r *= bus
+
+print("The earliest timestamp: "+str(val))
