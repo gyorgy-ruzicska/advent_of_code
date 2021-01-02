@@ -368,10 +368,10 @@ for i in range(len(numbers[:index-2])):
     for j in range(len(numbers[i+1:index-1])):
         start_number=numbers[i]
         end_number=numbers[i+j+1]
-        sum=0
+        my_sum=0
         for element in numbers[i:i+j+2]:
-            sum+=element
-        if sum==invalid_number:
+            my_sum+=element
+        if my_sum==invalid_number:
             print("The sum of the numbers: "+str(min(numbers[i:i+j+2])+max(numbers[i:i+j+2])))
             break
 
@@ -437,9 +437,6 @@ for key, value in dict_of_chains.items():
 print("The number of distinct ways to arrange adapters: "+str(i))
 
 #Day_11
-import pandas as pd
-import csv
-import re
 
 with open('Day11/input.txt', 'r') as fd:
     reader = csv.reader(fd)
@@ -526,3 +523,116 @@ for i in [(list_of_seats,"first rule"), (list_of_seats_copy, "second rule")]:
             if seat=="#":
                 occupied_seats+=1
     print("The number of occupied seats with %s: "%i[1]+str(occupied_seats))
+
+#Day_12
+
+import pandas as pd
+import csv
+import re
+
+with open('Day12/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    list_of_instructions=[]
+    for row in reader:
+        list_of_row=[row[0][0], int(row[0][1:])]
+        list_of_instructions.append(list_of_row)
+
+def turn_waypoint(waypoint, instruction):
+    waypoint_x=waypoint[0]
+    waypoint_y =waypoint[1]
+    old_x=waypoint_x
+    old_y=waypoint_y
+    if instruction[0]=="R":
+        number_of_turns=(instruction[1]/90)%4
+    else:
+        number_of_turns=4-(instruction[1]/90)%4
+    if  number_of_turns==1:
+        waypoint_x=old_y
+        waypoint_y=-old_x
+    elif number_of_turns==2:
+        waypoint_x=-old_x
+        waypoint_y=-old_y
+    elif number_of_turns==3:
+        waypoint_x=-old_y
+        waypoint_y=old_x
+    return waypoint_x, waypoint_y
+
+def turn_direction(direction, instruction):
+    mappings={"N":0, "E":1, "S":2, "W":3}
+    contra_mappings={0:"N", 1:"E", 2:"S", 3:"W"}
+    current_direction=mappings[direction]
+    if instruction[0]=="R":
+        number_of_turns=(instruction[1]/90)%4
+    else:
+        number_of_turns=4 - ((instruction[1]/90)%4)
+    updated_direction=(current_direction+number_of_turns)%4
+    updated_direction=contra_mappings[int(updated_direction)]
+    return updated_direction
+
+def move_forward(position, instruction):
+    x_value=position[0][0]
+    y_value=position[0][1]
+    if position[1]=="N":
+        y_value+=instruction[1]
+    if position[1]=="S":
+        y_value-=instruction[1]
+    if position[1]=="E":
+        x_value+=instruction[1]
+    if position[1]=="W":
+        x_value-=instruction[1]
+    return x_value, y_value
+
+def move_forward_waypoint(position, instruction):
+    x_value=position[0][0]
+    y_value=position[0][1]
+    waypoint_x=position[2][0]
+    waypoint_y=position[2][1]
+    x_value+=waypoint_x*instruction[1]
+    y_value+=waypoint_y*instruction[1]
+    return x_value, y_value
+
+def update_position(position, instruction, waypoint_move=False):
+    x_value=position[0][0]
+    y_value=position[0][1]
+    direction=position[1]
+    waypoint=position[2]
+    if waypoint_move==True:
+        modify_x=position[2][0]
+        modify_y=position[2][1]
+    else:
+        modify_x=x_value
+        modify_y=y_value
+    if instruction[0]=="N":
+        modify_y+=instruction[1]
+    if instruction[0]=="S":
+        modify_y-=instruction[1]
+    if instruction[0]=="E":
+        modify_x+=instruction[1]
+    if instruction[0]=="W":
+        modify_x-=instruction[1]
+    if (instruction[0]=="R") | (instruction[0]=="L"):
+        if waypoint_move==True:
+            modify_x, modify_y=turn_waypoint(waypoint, instruction)
+        else:
+            direction=turn_direction(direction, instruction)
+    if instruction[0]=="F":
+        if waypoint_move==True:
+            x_value, y_value=move_forward_waypoint(position, instruction)
+        else:
+            modify_x, modify_y=move_forward(position, instruction)
+    if waypoint_move==True:
+        waypoint=[modify_x, modify_y]
+    else:
+        x_value, y_value = modify_x, modify_y
+    return [[x_value, y_value], direction, waypoint]
+
+starting_position=[[0,0],"E",[10,1]]
+new_position_1=starting_position
+new_position_2=starting_position
+
+for i in list_of_instructions:
+    new_position_1=update_position(new_position_1, i)
+    new_position_2=update_position(new_position_2, i, waypoint_move=True)
+
+print("Manhattan distance with first rule: "+str(abs(new_position_1[0][0])+abs(new_position_1[0][1])))
+print("Manhattan distance with second rule: "+str(abs(new_position_2[0][0])+abs(new_position_2[0][1])))
