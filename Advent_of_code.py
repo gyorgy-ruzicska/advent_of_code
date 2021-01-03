@@ -2,6 +2,7 @@ import pandas as pd
 import csv
 import re
 import math
+import itertools
 
 
 #Day_1
@@ -679,3 +680,55 @@ for bus in ids[1:]:
     r *= bus
 
 print("The earliest timestamp: "+str(val))
+
+#Day_14
+with open('Day14/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    list_of_rows=[]
+    for row in reader:
+        list_of_rows.append(row[0].split(" = "))
+
+def rule_1(list_of_rows):
+    memory_dictionary={}
+    for i in list_of_rows:
+        if i[0]=="mask":
+            mask=i[1]
+        else:
+            dict_key=int("".join(filter(str.isdigit, i[0])))
+            number_to_convert=str(f'{int(i[1]):036b}')
+            number_converted=[i if mask[index]=="X" else mask[index] for index, i in enumerate(number_to_convert)]
+            number_converted=int("".join(number_converted),2)
+            memory_dictionary[dict_key]=number_converted
+    return memory_dictionary
+
+def rule_2(list_of_rows):
+    memory_dictionary={}
+    for i in list_of_rows:
+        if i[0]=="mask":
+            mask=i[1]
+        else:
+            dict_key=int("".join(filter(str.isdigit, i[0])))
+            number_to_convert=str(f'{dict_key:036b}')
+            number_converted=["X" if mask[index]=="X" else i if mask[index]=="0" else "1" for index, i in enumerate(number_to_convert)]
+            number_of_floating=sum([1 for i in number_converted if i=="X"])
+            permutations=list(itertools.product([0, 1], repeat=number_of_floating))
+            list_of_new_keys=[]
+            for j in permutations:
+                final_number=[]
+                j_index=0
+                for k in number_converted:
+                    if k!="X":
+                        final_number.append(k)
+                    else:
+                        final_number.append(str(j[j_index]))
+                        j_index+=1
+                list_of_new_keys.append(int("".join(final_number),2))
+            for j in list_of_new_keys:
+                memory_dictionary[j]=int(i[1])
+    return memory_dictionary
+
+memory_dictionary_1=rule_1(list_of_rows)
+print("Sum of memory values using Rule 1: "+str(sum(list(memory_dictionary_1.values()))))
+
+memory_dictionary_2=rule_2(list_of_rows)
+print("Sum of memory values using Rule 2: "+str(sum(list(memory_dictionary_2.values()))))
