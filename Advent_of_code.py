@@ -3,7 +3,7 @@ import csv
 import re
 import math
 import itertools
-
+from tqdm import tqdm
 
 #Day_1
 with open('Day1/input.txt', 'r') as fd:
@@ -732,3 +732,36 @@ print("Sum of memory values using Rule 1: "+str(sum(list(memory_dictionary_1.val
 
 memory_dictionary_2=rule_2(list_of_rows)
 print("Sum of memory values using Rule 2: "+str(sum(list(memory_dictionary_2.values()))))
+
+#Day 15
+from tqdm import tqdm
+
+played_numbers=[20,9,11,0,1,2]
+
+turns={20:[1], 9:[2], 11:[3], 0:[4], 1:[5], 2:[6]}
+
+last_key=played_numbers[-1]
+last_value=turns[last_key]
+for j in [(7,2021), (2021,30000001)]:
+    for i in tqdm(range(j[0],j[1])):
+        if len(last_value)>1:
+            #played_numbers.remove(played_numbers[-1])
+            new_element=last_value[1]-last_value[0]
+            turns[last_key]=[last_value[1]]
+            #played_numbers.append(new_element)
+        else:
+            new_element=0
+            #played_numbers.append(new_element)
+        new_key=new_element
+        new_value=i
+        if new_key in turns:
+          turns[new_key].append(new_value)
+        else:
+          turns[new_key] = [new_value]
+        last_key=new_key
+        last_value=turns[last_key]
+    spoken_number=j[1]-1
+    for key,value in turns.items():
+        if spoken_number in value:
+          print("The %d spoken number is: "%spoken_number+str(key))
+          break
