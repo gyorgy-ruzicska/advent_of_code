@@ -4,6 +4,7 @@ import re
 import math
 import itertools
 from tqdm import tqdm
+from dataclasses import dataclass
 
 #Day_1
 with open('Day1/input.txt', 'r') as fd:
@@ -765,3 +766,111 @@ for j in [(7,2021), (2021,30000001)]:
         if spoken_number in value:
           print("The %d spoken number is: "%spoken_number+str(key))
           break
+
+#Day_16
+with open('Day16/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    list_of_rules=[]
+    my_ticket=[]
+    nearby_tickets=[]
+    list_of_lists=["list_of_rules","my_ticket", "nearby_tickets"]
+    current_list=0
+    for row in reader:
+        if row==[]:
+            current_list+=1
+        elif current_list==0:
+            new_row=row[0].split(": ")
+            new_row[0]=[new_row[0]]
+            new_row[1]=new_row[1].split(" or ")
+            for i in range(2):
+                new_row[1][i]=new_row[1][i].split("-")
+                new_row[1][i]=[int(j) for j in new_row[1][i]]
+            new_row=[item for sublist in new_row for item in sublist]
+            eval(list_of_lists[current_list]).append(new_row)
+        elif (row==["your ticket:"]) | (row==["nearby tickets:"]):
+            pass
+        else:
+            row=[int(j) for j in row]
+            eval(list_of_lists[current_list]).append(row)
+
+possible_numbers=[]
+for i in list_of_rules:
+    for j in range(1,3):
+        for l in range(i[j][0],i[j][1]+1):
+            possible_numbers.append(l)
+possible_numbers=list(set(possible_numbers))
+
+not_valid=[]
+valid_tickets=my_ticket.copy()
+for i in range(len(nearby_tickets)):
+    valid_ticket=True
+    for j in nearby_tickets[i]:
+        if j not in possible_numbers:
+            not_valid.append(j)
+            valid_ticket=False
+    if valid_ticket:
+        valid_tickets.append(nearby_tickets[i])
+
+possibility_matrix=[[True]*20 for i in range(20)]
+
+for i in range(len(valid_tickets[0])):
+    for j in range(len(valid_tickets)):
+        for k in range(len(list_of_rules)):
+            if (valid_tickets[j][i] not in range(list_of_rules[k][1][0], list_of_rules[k][1][1]+1)) &\
+            (valid_tickets[j][i] not in range(list_of_rules[k][2][0], list_of_rules[k][2][1]+1)):
+                possibility_matrix[i][k]=False
+
+possibility_matrix = {k: v for (k, v) in enumerate(possibility_matrix)}
+optimal_order=[]
+for i,v in possibility_matrix.items():
+    total_sum=[1 for i in v if i==True]
+    optimal_order.append(sum(total_sum))
+
+optimal_order=list(zip(optimal_order, possibility_matrix.keys()))
+optimal_order=sorted(optimal_order, key=lambda tup: tup[0])
+
+possibility_matrix = {k[1]: possibility_matrix[k[1]] for k in optimal_order}
+
+current_items=[]
+taken_columns=[]
+data_columns=[i[0] for i in list_of_rules]
+
+@dataclass
+class ordering:
+    choices: dict
+    taken_columns:list
+    data_columns: list
+    def add_new_element(self):
+        new_orderings=[]
+        if self.taken_columns!=[]:
+            taken_indexes=[i[2] for i in self.taken_columns]
+        else:
+            taken_indexes=[]
+        try:
+            next_element=list(self.choices.items())[0]
+            element_index=next_element[0]
+            element_value=next_element[1]
+            for element in range(len(v)):
+                if element_value[element]==True:
+                    if element not in taken_indexes:
+                        new_choices=self.choices.copy()
+                        new_choices.pop(element_index)
+                        new_taken_columns=self.taken_columns.copy()
+                        new_taken_columns.append((element_index, self.data_columns[element], element))
+                        new_orderings.append(ordering(new_choices, new_taken_columns, self.data_columns))
+            return new_orderings
+        except IndexError:
+            return []
+
+class_items = [ordering(possibility_matrix, taken_columns, data_columns)]
+iter = 0
+while iter<len(class_items):
+    class_items = class_items + class_items[iter].add_new_element()
+    iter +=1
+
+final_positions=class_items[-1].taken_columns
+final_positions=[i[0] for i in final_positions if "departure" in i[1]]
+final_product=1
+for i in final_positions:
+    final_product*=my_ticket[0][i]
+print("The product of the numbers in my ticket: "+str(final_product))
