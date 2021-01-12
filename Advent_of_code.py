@@ -3,6 +3,7 @@ import csv
 import re
 import math
 import itertools
+import numpy as np
 from tqdm import tqdm
 from dataclasses import dataclass
 
@@ -874,3 +875,96 @@ final_product=1
 for i in final_positions:
     final_product*=my_ticket[0][i]
 print("The product of the numbers in my ticket: "+str(final_product))
+
+import pandas as pd
+import csv
+import re
+import math
+import itertools
+import numpy as np
+from tqdm import tqdm
+from dataclasses import dataclass
+
+#Day_17
+with open('Day17/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    list_of_cubes=[]
+    for row in reader:
+        row=[element for element in row[0]]
+        list_of_cubes.append(row)
+
+space_3d = np.zeros((13,20,20), str)
+space_4d = np.zeros((13,13,20,20), str)
+
+for i in range(len(list_of_cubes)):
+    for j in range(len(list_of_cubes[i])):
+        space_3d[6][13-i][j+6]=list_of_cubes[i][j]
+        space_4d[6][6][13-i][j+6]=list_of_cubes[i][j]
+
+space_3d=np.where(space_3d=='', '.', space_3d)
+space_4d=np.where(space_4d=='', '.', space_4d)
+
+def check_neighbors(space, dimensions, z_dim, y_dim, x_dim, w_dim = 0):
+    number_of_actives=0
+    for i in [-1,0,1]:
+        for j in [-1,0,1]:
+            for k in [-1,0,1]:
+                if dimensions==4:
+                    for l in [-1,0,1]:
+                        try:
+                            if (space[w_dim+l][z_dim+i][y_dim+j][x_dim+k]=='#') & ((i!=0) | (j!=0) | (k!=0) | (l!=0)):
+                                number_of_actives+=1
+                        except IndexError:
+                            pass
+                else:
+                    try:
+                        if (space[z_dim+i][y_dim+j][x_dim+k]=='#') & ((i!=0) | (j!=0) | (k!=0)):
+                            number_of_actives+=1
+                    except IndexError:
+                        pass
+    return  number_of_actives
+
+def activation_cycle(space, dimensions):
+    space_copy=space.copy()
+    if dimensions==4:
+        for w_dim in range(len(space)):
+            for z_dim in range(len(space[w_dim])):
+                for y_dim in range(len(space[w_dim][z_dim])):
+                    for x_dim in range(len(space[w_dim][z_dim][y_dim])):
+                        if space[w_dim][z_dim][y_dim][x_dim]=='.':
+                            number_of_actives=check_neighbors(space, dimensions, z_dim, y_dim, x_dim, w_dim)
+                            if number_of_actives==3:
+                                space_copy[w_dim][z_dim][y_dim][x_dim]='#'
+                        else:
+                            number_of_actives=check_neighbors(space, dimensions, z_dim, y_dim, x_dim, w_dim)
+                            if (number_of_actives==2) | (number_of_actives==3):
+                                space_copy[w_dim][z_dim][y_dim][x_dim]='#'
+                            else:
+                                space_copy[w_dim][z_dim][y_dim][x_dim]='.'
+    else:
+        for z_dim in range(len(space)):
+            for y_dim in range(len(space[z_dim])):
+                for x_dim in range(len(space[z_dim][y_dim])):
+                    if space[z_dim][y_dim][x_dim]=='.':
+                        number_of_actives=check_neighbors(space, dimensions, z_dim, y_dim, x_dim)
+                        if number_of_actives==3:
+                            space_copy[z_dim][y_dim][x_dim]='#'
+                    else:
+                        number_of_actives=check_neighbors(space,dimensions, z_dim, y_dim, x_dim)
+                        if (number_of_actives==2) | (number_of_actives==3):
+                            space_copy[z_dim][y_dim][x_dim]='#'
+                        else:
+                            space_copy[z_dim][y_dim][x_dim]='.'
+    return space_copy
+
+for i in tqdm(range(6)):
+    space_3d=activation_cycle(space_3d, 3)
+    space_4d=activation_cycle(space_4d, 4)
+
+unique, counts = np.unique(space_3d, return_counts=True)
+final_dict=dict(zip(unique, counts))
+print("The total number of active cubes in a 3D space: "+str(final_dict['#']))
+
+unique, counts = np.unique(space_4d, return_counts=True)
+final_dict=dict(zip(unique, counts))
+print("The total number of active cubes in a 4D space: "+str(final_dict['#']))
