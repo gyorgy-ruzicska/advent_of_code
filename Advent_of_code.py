@@ -968,3 +968,106 @@ print("The total number of active cubes in a 3D space: "+str(final_dict['#']))
 unique, counts = np.unique(space_4d, return_counts=True)
 final_dict=dict(zip(unique, counts))
 print("The total number of active cubes in a 4D space: "+str(final_dict['#']))
+
+
+#Day_18
+with open('Day18/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    list_of_expressions=[]
+    for row in reader:
+        row=[i for i in row[0] if i!=" "]
+        row=[int(i) if (i!='*') & (i!='+') & (i!='(') & (i!=')') else i for i in row ]
+        list_of_expressions.append(row)
+
+def find_smallest_brackets(expression):
+    index_of_brackets={'bracket_exists':'no'}
+    last_index='bracket_exists'
+    for i in range(len(expression)):
+        if (index_of_brackets=={'bracket_exists':'no'}) & (expression[i]=='('):
+            index_of_brackets[i]='('
+            last_index=i
+            index_of_brackets['bracket_exists']='yes'
+        elif (expression[i]=='(') & (index_of_brackets[last_index]=='('):
+            del index_of_brackets[last_index]
+            index_of_brackets[i]='('
+            last_index=i
+        elif (expression[i]==')') & (index_of_brackets[last_index]=='('):
+            index_of_brackets[i]=')'
+            last_index=i
+        elif (expression[i]=='(') & (index_of_brackets[last_index]==')'):
+            index_of_brackets[i]='('
+            last_index=i
+    return index_of_brackets
+
+def execute_simple_calculation(expression, advanced_math=False):
+    old_numbers=expression.copy()
+    if advanced_math==False:
+        new_numbers=[]
+        while len(new_numbers)!=1:
+            new_numbers=[]
+            for i in range(len(old_numbers)):
+                if old_numbers[i]=='+':
+                    new_number=old_numbers[i-1]+old_numbers[i+1]
+                    new_numbers.append(new_number)
+                    new_numbers.extend(old_numbers[i+2:])
+                    break
+                elif old_numbers[i]=='*':
+                    new_number=old_numbers[i-1]*old_numbers[i+1]
+                    new_numbers.append(new_number)
+                    new_numbers.extend(old_numbers[i+2:])
+                    break
+            old_numbers=new_numbers.copy()
+    else:
+        while "+" in old_numbers:
+            new_numbers=[]
+            for i in range(len(old_numbers)):
+                if old_numbers[i]=='+':
+                    new_number=old_numbers[i-1]+old_numbers[i+1]
+                    if old_numbers[:i-1]!=[]:
+                        new_numbers.extend(old_numbers[:i-1])
+                    else:
+                        pass
+                    new_numbers.append(new_number)
+                    new_numbers.extend(old_numbers[i+2:])
+                    break
+            old_numbers=new_numbers.copy()
+        new_numbers=old_numbers
+        while len(new_numbers)!=1:
+            new_numbers=[]
+            for i in range(len(old_numbers)):
+                if old_numbers[i]=='*':
+                    new_number=old_numbers[i-1]*old_numbers[i+1]
+                    new_numbers.append(new_number)
+                    new_numbers.extend(old_numbers[i+2:])
+                    break
+            old_numbers=new_numbers.copy()
+    return new_numbers[0]
+
+
+def execute_complex_calculation(expression, index_of_brackets, advanced_math=False):
+    new_expression=expression.copy()
+    substract_length=0
+    if index_of_brackets['bracket_exists']=='yes':
+        for j in range(1, len(index_of_brackets)-1, 2):
+            opening_bracket_position=list(index_of_brackets.keys())[j]-substract_length
+            closing_bracket_position=list(index_of_brackets.keys())[j+1]-substract_length
+            calculation=execute_simple_calculation(new_expression[opening_bracket_position+1:closing_bracket_position],\
+            advanced_math)
+            substract_length+=len(new_expression[opening_bracket_position+1:closing_bracket_position])+1
+            new_expression[opening_bracket_position:closing_bracket_position+1]=[calculation]
+    else:
+        new_expression=execute_simple_calculation(new_expression, advanced_math)
+    return new_expression
+
+
+for j in [False, True]:
+    final_number=0
+    for i in list_of_expressions:
+        while isinstance(i, int)==False:
+            index_of_brackets=find_smallest_brackets(i)
+            i=execute_complex_calculation(i, index_of_brackets, advanced_math=j)
+        final_number+=i
+    if j==False:
+        print("The final number with simple maths: "+str(final_number))
+    else:
+        print("The final number with advanced maths: "+str(final_number))
