@@ -6,6 +6,7 @@ import itertools
 import numpy as np
 from tqdm import tqdm
 from dataclasses import dataclass
+import copy
 
 #Day_1
 with open('Day1/input.txt', 'r') as fd:
@@ -1071,3 +1072,47 @@ for j in [False, True]:
         print("The final number with simple maths: "+str(final_number))
     else:
         print("The final number with advanced maths: "+str(final_number))
+
+#Day_19
+with open('Day19/input.txt', 'r') as fd:
+    reader = csv.reader(fd)
+    dict_of_rules={}
+    patterns=[]
+    append_rules=True
+    for row in reader:
+        if row:
+            if append_rules==True:
+                key, value = row[0].split(': ')
+                key = int(key)
+                value = value.replace("\"", "")
+                dict_of_rules[key]=value
+            else:
+                patterns.append(row[0])
+        else:
+            append_rules=False
+
+def fill_rule(rules, rule_num):
+	rule = rules[rule_num]
+	if re.search("[a-z]", rule):
+		return rule
+	for sub_rule in rule.split(" | "):
+		for num in sub_rule.split():
+			inner_rule = fill_rule(rules, int(num))
+			if "|" in inner_rule:
+				inner_rule = f"({inner_rule})"
+			rule = rule.replace(num, inner_rule, 1)
+	rule = rule.replace(" ", "")
+	rules[rule_num] = rule
+	return rule
+
+def is_following_rule(message, rule):
+	return bool(re.match(f"^({rule})$", message))
+
+filled_rules = dict_of_rules.copy()
+rule_num = 0
+fill_rule(filled_rules, rule_num)
+num_valid = 0
+for message in patterns:
+	if is_following_rule(message, filled_rules[rule_num]):
+		num_valid += 1
+print("The number of matching messages :", num_valid)
